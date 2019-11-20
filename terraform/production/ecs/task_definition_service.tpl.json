@@ -1,0 +1,64 @@
+[
+  {
+    "name": "cafepedia-api",
+    "image": "318288222771.dkr.ecr.ap-northeast-1.amazonaws.com/cafepedia-api:${tag-id}",
+    "memoryReservation": 512,
+    "essential": true,
+    "portMappings": [
+      {
+        "hostPort": 0,
+        "protocol": "tcp",
+        "containerPort": 3000
+      }
+    ],
+    "command": ["bundle", "exec", "pumactl", "start"],
+    "environment": [
+      {
+        "name": "RAILS_ENV",
+        "value": "${rails-env}"
+      },
+      {
+        "name": "RACK_ENV",
+        "value": "${rails-env}"
+      },
+      {
+        "name": "RAILS_SERVE_STATIC_FILES",
+        "value": "true"
+      }
+    ],
+    "secrets": [
+      {
+        "name": "RAILS_MASTER_KEY",
+        "valueFrom": "/app/rails_master_key"
+      },
+      {
+        "name": "DB_USER_NAME",
+        "valueFrom": "/app/user_name"
+      },
+      {
+        "name": "DB_PORT",
+        "valueFrom": "/app/db_port"
+      },
+      {
+        "name": "DB_PASSWORD",
+        "valueFrom": "/app/db_password"
+      },
+      {
+        "name": "DB_NAME",
+        "valueFrom": "/app/db_name"
+      },
+      {
+        "name": "DB_HOST",
+        "valueFrom": "/app/db_host"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "cafepedia-api",
+        "awslogs-region": "ap-northeast-1",
+        "awslogs-stream-prefix": "service"
+      }
+    }
+  }
+]
