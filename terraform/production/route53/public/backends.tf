@@ -1,7 +1,6 @@
-data "terraform_remote_state" "route53_public" {
-  backend = "s3"
-
-  config = {
+### s3バケットにtfstateを保存
+terraform {
+  backend "s3" {
     bucket = "cafepedia-api"
     key    = "route53/public/terraform.tfstate"
     region = "ap-northeast-1"

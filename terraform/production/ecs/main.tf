@@ -1,21 +1,25 @@
 ### クラスター
-resource "aws_ecs_cluster" "cafepedia-api_ecs_cluster" {
-  name = local.service_name
+resource "aws_ecs_cluster" "default" {
+  name = var.service_name
 }
 
 ### タスク定義のテンプレート
 data "template_file" "ecs_task_definition_service" {
-  template = file("./task_definision_service.tpl.json")
+  template = file("./task_definition_service.tpl.json")
   vars = {
-    tag-id    = var.tag-id
-    rails-env = var.rails-env
+    service_name = var.service_name
+    ecr_url      = var.ecr_url
+    tag_id       = var.tag_id
+    rails_env    = var.rails_env
   }
 }
 data "template_file" "ecs_task_definition_migration" {
-  template = file("./task_definition_migration.tpl.json")
+  template = file("./task_definition_migrate.tpl.json")
   vars = {
-    tag-id    = var.tag-id
-    rails-env = var.rails-env
+    service_name = var.service_name
+    ecr_url      = var.ecr_url
+    tag_id       = var.tag_id
+    rails_env    = var.rails_env
   }
 }
 
@@ -34,14 +38,14 @@ data "aws_iam_policy_document" "ecs_task_execution" {
 }
 module "ecs_task_execution_role" {
   source     = "./iam/"
-  name       = "ecs-task-execution"
+  name       = "${var.service_name}-ecs-task-execution"
   identifier = "ecs-tasks.amazonaws.com"
   policy     = data.aws_iam_policy_document.ecs_task_execution.json
 }
 
 ### タスク定義
 resource "aws_ecs_task_definition" "default" {
-  family                = "${local.service_name}-service"
+  family                = "${var.service_name}-service"
   network_mode          = "bridge"
   memory                = "512"
   cpu                   = "216"
@@ -49,8 +53,8 @@ resource "aws_ecs_task_definition" "default" {
   execution_role_arn    = module.ecs_task_execution_role.iam_role_arn
 }
 
-# resource "aws_ecs_task_definition" "cafepdia-api-migrate" {
-#   family                = "cafepdia-api-migrate"
+# resource "aws_ecs_task_definition" "migrate" {
+#   family                = "${var.service_name}-migrate"
 #   network_mode          = "bridge"
 #   memory                = "512"
 #   cpu                   = "216"
@@ -59,20 +63,20 @@ resource "aws_ecs_task_definition" "default" {
 # }
 
 ### ECSサービス
-resource "aws_ecs_service" "cafepedia-api-ecs-service" {
-  name            = "${local.service_name}-ecs-service"
-  cluster         = aws_ecs_cluster.cafepedia-api_ecs_cluster.arn
+resource "aws_ecs_service" "default" {
+  name            = "${var.service_name}-ecs-service"
+  cluster         = aws_ecs_cluster.default.arn
   desired_count   = 1
   launch_type     = "EC2"
   task_definition = aws_ecs_task_definition.default.arn
   load_balancer {
-    target_group_arn = data.terraform_remote_state.target_group.outputs.target_group_arn
-    container_name   = local.service_name
+    target_group_arn = data.terraform_remote_state.route53_public.outputs.aws_lb_target_group_http_arn
+    container_name   = var.service_name
     container_port   = "3000"
   }
 }
 
 resource "aws_cloudwatch_log_group" "cafepedia-api" {
-  name = local.service_name
+  name = var.service_name
 }
 

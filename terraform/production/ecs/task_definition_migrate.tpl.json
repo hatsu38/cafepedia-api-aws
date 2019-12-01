@@ -1,49 +1,29 @@
 [
   {
-    "name": "cafepedia-api-migrate",
-    "image": "318288222771.dkr.ecr.ap-northeast-1.amazonaws.com/cafepedia-api:${tag-id}",
+    "name": "${service_name}-migrate",
+    "image": "${ecr_url}/${service_name}:${tag_id}",
     "essential": true,
     "command": ["bundle", "exec", "rails", "db:create", "db:migrate"],
     "environment": [
       {
         "name": "RAILS_ENV",
-        "value": "${rails-env}"
+        "value": "${rails_env}"
       },
       {
         "name": "RACK_ENV",
-        "value": "${rails-env}"
+        "value": "${rails_env}"
       }
     ],
     "secrets": [
       {
         "name": "RAILS_MASTER_KEY",
-        "valueFrom": "/app/rails_master_key"
-      },
-      {
-        "name": "DB_USER_NAME",
-        "valueFrom": "/app/user_name"
-      },
-      {
-        "name": "DB_PORT",
-        "valueFrom": "/app/db_port"
-      },
-      {
-        "name": "DB_PASSWORD",
-        "valueFrom": "/app/db_password"
-      },
-      {
-        "name": "DB_NAME",
-        "valueFrom": "/app/db_name"
-      },
-      {
-        "name": "DB_HOST",
-        "valueFrom": "/app/db_host"
+        "valueFrom": "/${service_name}/rails_master_key"
       }
     ],
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {
-        "awslogs-group": "cafepedia-api",
+        "awslogs-group": "${service_name}",
         "awslogs-region": "ap-northeast-1",
         "awslogs-stream-prefix": "service"
       }

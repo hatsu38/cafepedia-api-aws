@@ -6,7 +6,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = local.service_name
+    Name = var.service_name
   }
 }
 
@@ -17,7 +17,7 @@ resource "aws_subnet" "public_subnet_1" {
   map_public_ip_on_launch = true
   availability_zone       = "ap-northeast-1a"
   tags = {
-    Name = "${local.service_name}-public-1"
+    Name = "${var.service_name}-public-1"
   }
 }
 resource "aws_subnet" "public_subnet_2" {
@@ -26,7 +26,7 @@ resource "aws_subnet" "public_subnet_2" {
   map_public_ip_on_launch = true
   availability_zone       = "ap-northeast-1c"
   tags = {
-    Name = "${local.service_name}-public-2"
+    Name = "${var.service_name}-public-2"
   }
 }
 
@@ -36,7 +36,7 @@ resource "aws_subnet" "private_subnet_1" {
   cidr_block        = "10.0.2.0/24"
   availability_zone = "ap-northeast-1a"
   tags = {
-    Name = "${local.service_name}-db-private-1"
+    Name = "${var.service_name}-db-private-1"
   }
 }
 resource "aws_subnet" "private_subnet_2" {
@@ -44,13 +44,13 @@ resource "aws_subnet" "private_subnet_2" {
   cidr_block        = "10.0.3.0/24"
   availability_zone = "ap-northeast-1c"
   tags = {
-    Name = "${local.service_name}-db-private-2"
+    Name = "${var.service_name}-db-private-2"
   }
 }
 
 # RDSプライベートサブネットグループ
 resource "aws_db_subnet_group" "db_subnet_group" {
-  name = "${local.service_name}-db-subnets"
+  name = "${var.service_name}-db-subnets"
   subnet_ids = [
     aws_subnet.private_subnet_1.id,
     aws_subnet.private_subnet_2.id
@@ -61,41 +61,55 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 resource "aws_internet_gateway" "internet_gateway" {
   vpc_id = aws_vpc.vpc.id
   tags = {
-    Name = "${local.service_name}-public"
+    Name = "${var.service_name}-public"
   }
 }
 
 ### パブリックサブネットのルートテーブル
-resource "aws_route_table" "public" {
+resource "aws_route_table" "public-1" {
   vpc_id = aws_vpc.vpc.id
   tags = {
-    Name = "${local.service_name}-public"
+    Name = "${var.service_name}-public-1"
+  }
+}
+resource "aws_route_table" "public-2" {
+  vpc_id = aws_vpc.vpc.id
+  tags = {
+    Name = "${var.service_name}-public-2"
   }
 }
 
 ### ルート
-resource "aws_route" "public" {
-  route_table_id         = aws_route_table.public.id
+resource "aws_route" "public-1" {
+  route_table_id         = aws_route_table.public-1.id
+  gateway_id             = aws_internet_gateway.internet_gateway.id
+  destination_cidr_block = "0.0.0.0/0"
+}
+resource "aws_route" "public-2" {
+  route_table_id         = aws_route_table.public-2.id
   gateway_id             = aws_internet_gateway.internet_gateway.id
   destination_cidr_block = "0.0.0.0/0"
 }
 
 ### パブリックサブネットとルートテーブルの紐付け
-resource "aws_route_table_association" "public" {
+resource "aws_route_table_association" "public-1" {
   subnet_id      = aws_subnet.public_subnet_1.id
-  route_table_id = aws_route_table.public.id
+  route_table_id = aws_route_table.public-1.id
 }
-
+resource "aws_route_table_association" "public-2" {
+  subnet_id      = aws_subnet.public_subnet_2.id
+  route_table_id = aws_route_table.public-2.id
+}
 
 ### IAM role
 resource "aws_iam_instance_profile" "instance_role" {
-  name = "${local.service_name}-instance_role"
+  name = "${var.service_name}-instance_role"
   role = aws_iam_role.instance_role.name
 }
 
 ### カフェペディアをApplyするIAM Role
 resource "aws_iam_role" "instance_role" {
-  name               = "${local.service_name}-instance_role"
+  name               = "${var.service_name}-instance_role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -133,12 +147,12 @@ EOF
 
 ### セキュリティグループ
 # EC2インスタンスのセキュリティグループ
-resource "aws_security_group" "ec2-security-group" {
-  name        = "ec2-${local.service_name}"
-  description = "ec2-sg-${local.service_name}"
+resource "aws_security_group" "app" {
+  name        = "ec2-${var.service_name}"
+  description = "ec2-sg-${var.service_name}"
   vpc_id      = aws_vpc.vpc.id
   tags = {
-    Name = "ec2-${local.service_name}"
+    Name = "ec2-${var.service_name}"
   }
   egress {
     from_port   = 0
@@ -173,9 +187,9 @@ resource "aws_security_group" "ec2-security-group" {
 }
 
 # RDSのセキュリティグループ
-resource "aws_security_group" "db-security-group" {
-  name        = "${local.service_name}-db"
-  description = "DB-sg${local.service_name}"
+resource "aws_security_group" "db" {
+  name        = "${var.service_name}-db"
+  description = "DB-sg-${var.service_name}"
   vpc_id      = aws_vpc.vpc.id
   ingress {
     from_port = 5432
@@ -183,10 +197,10 @@ resource "aws_security_group" "db-security-group" {
     protocol  = "tcp"
 
     security_groups = [
-      aws_security_group.ec2-security-group.id
+      aws_security_group.app.id
     ]
   }
   tags = {
-    Name = "${local.service_name}-db-security-group"
+    Name = "${var.service_name}-db-security-group"
   }
 }

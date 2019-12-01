@@ -1,3 +1,3 @@
-locals {
-  service_name = "cafepeia-api"
+variable "service_name" {
+  default = "cafepedia-api"
 }
