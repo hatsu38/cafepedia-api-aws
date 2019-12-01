@@ -28,11 +28,23 @@ resource "aws_acm_certificate_validation" "app" {
   validation_record_fqdns = [aws_route53_record.certificate.fqdn]
 }
 
+# resource "aws_lb_listener" "http" {
+#   load_balancer_arn = data.terraform_remote_state.route53_public.outputs.aws_lb_default_arn
+#   port              = "80"
+#   protocol          = "HTTP"
+
+#   default_action {
+#     target_group_arn = data.terraform_remote_state.route53_public.outputs.aws_lb_target_group_http_arn
+#     type             = "forward"
+#   }
+# }
+
 resource "aws_lb_listener" "https" {
   load_balancer_arn = data.terraform_remote_state.route53_public.outputs.aws_lb_default_arn
   port              = "443"
   protocol          = "HTTPS"
   certificate_arn   = aws_acm_certificate.app.arn
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
   default_action {
     target_group_arn = data.terraform_remote_state.route53_public.outputs.aws_lb_target_group_http_arn
     type             = "forward"
