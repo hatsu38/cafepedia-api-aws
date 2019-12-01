@@ -1,10 +1,6 @@
-/terraform/production/ecr/.terraform
-/terraform/production/ecr/terraform.tfstate*
-/terraform/production/ecs/.terraform
-/terraform/production/ecs/terraform.tfstate*
-/terraform/production/ec2/.terraform
-/terraform/production/ec2/terraform.tfstate*
-/terraform/production/vpc/.terraform
-/terraform/production/vpc/terraform.tfstate*
-/terraform/production/ssm/.terraform
-/terraform/production/ssm/terraform.tfstate*
+# Local .terraform directories
+**/.terraform/*
+
+# .tfstate files
+*.tfstate
+*.tfstate.*

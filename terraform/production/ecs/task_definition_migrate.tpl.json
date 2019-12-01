@@ -1,0 +1,32 @@
+[
+  {
+    "name": "${service_name}-migrate",
+    "image": "${ecr_url}/${service_name}:${tag_id}",
+    "essential": true,
+    "command": ["bundle", "exec", "rails", "db:create", "db:migrate"],
+    "environment": [
+      {
+        "name": "RAILS_ENV",
+        "value": "${rails_env}"
+      },
+      {
+        "name": "RACK_ENV",
+        "value": "${rails_env}"
+      }
+    ],
+    "secrets": [
+      {
+        "name": "RAILS_MASTER_KEY",
+        "valueFrom": "/${service_name}/rails_master_key"
+      }
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "${service_name}",
+        "awslogs-region": "ap-northeast-1",
+        "awslogs-stream-prefix": "service"
+      }
+    }
+  }
+]
