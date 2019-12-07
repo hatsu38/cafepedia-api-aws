@@ -1,4 +1,8 @@
 # カフェペディアAPIのTerraform
+![image](Single-AZ-EC2-on-ECS.png)
+
+関連リンク(以下のサービスが乗っています)
+https://github.com/hatsu38/cafepedia-api
 
 ## Terraformのインストール
 ```
@@ -45,6 +49,7 @@ terraform plan -var 'tag_id=0.0.1'
 ```
 
 ## 新しくサービスを作るとき
+#### 構築手順
 準備
 1. s3バケットをマネージメントコンソールから作成(サービス名で)
 2. backends.tfとremote_state.tf の s3バケット名を 1. で作成したバケット名に変更
@@ -62,17 +67,22 @@ terraform apply(Planの通りリソースを作成する)
 
     4-1. マネージメントコンソールから、SSMの値を更新
 
-5. VPCのApply
-6. EC2のApply
-7. Route53/PublicのApply
+5. ECRのApply
+6. VPCのApply
+7. EC2のApply
 
-    7-1. ホストゾーン作成後、お名前.comなどから名前解決のため移譲をする
+    7-1. マネージメントコンソールから、RDSの作成
 
-8. Route53/AcmのApply
+    7-2. ECRにAppをPush
+8. Route53/PublicのApply
 
-    8-1. 名前解決完了後、TLS証明書の作成が可能
+    8-1. ホストゾーン作成後、お名前.comなどから名前解決のため移譲をする
 
-9. ECSのApply
+9. Route53/AcmのApply
+
+    9-1. 名前解決完了後、TLS証明書の作成が可能
+
+10. ECSのApply
 
 ECRにPushされたImageのバージョンを指定してApply
 ```

@@ -1,5 +1,5 @@
 ### t3.small インスタンス
-resource "aws_instance" "cafepedia-api" {
+resource "aws_instance" "app" {
   ami                         = "ami-06c98c6fe6f20c437"
   instance_type               = "t3.small"
   key_name                    = var.service_name
@@ -25,11 +25,14 @@ resource "aws_instance" "cafepedia-api" {
     volume_size = "30"
     volume_type = "gp2"
   }
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
 ### EIP
 resource "aws_eip" "eip" {
-  instance = aws_instance.cafepedia-api.id
+  instance = aws_instance.app.id
   vpc      = true
   tags = {
     Name = var.service_name
