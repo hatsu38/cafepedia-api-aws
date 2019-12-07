@@ -12,6 +12,10 @@
       {
         "name": "RACK_ENV",
         "value": "${rails_env}"
+      },
+      {
+        "name": "RAILS_LOG_TO_STDOUT",
+        "value": "true"
       }
     ],
     "secrets": [
