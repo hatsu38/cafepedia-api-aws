@@ -53,22 +53,23 @@ resource "aws_ecs_task_definition" "default" {
   execution_role_arn    = module.ecs_task_execution_role.iam_role_arn
 }
 
-# resource "aws_ecs_task_definition" "migrate" {
-#   family                = "${var.service_name}-migrate"
-#   network_mode          = "bridge"
-#   memory                = "512"
-#   cpu                   = "216"
-#   container_definitions = "${data.template_file.ecs_task_definition_migration.rendered}"
-#   execution_role_arn    = "${module.ecs_task_execution_role.iam_role_arn}"
-# }
+resource "aws_ecs_task_definition" "migrate" {
+  family                = "${var.service_name}-migrate"
+  network_mode          = "bridge"
+  memory                = "512"
+  cpu                   = "216"
+  container_definitions = "${data.template_file.ecs_task_definition_migration.rendered}"
+  execution_role_arn    = "${module.ecs_task_execution_role.iam_role_arn}"
+}
 
 ### ECSサービス
 resource "aws_ecs_service" "default" {
-  name            = "${var.service_name}-ecs-service"
-  cluster         = aws_ecs_cluster.default.arn
-  desired_count   = 1
-  launch_type     = "EC2"
-  task_definition = aws_ecs_task_definition.default.arn
+  name                              = "${var.service_name}-ecs-service"
+  cluster                           = aws_ecs_cluster.default.arn
+  desired_count                     = 1
+  launch_type                       = "EC2"
+  task_definition                   = aws_ecs_task_definition.default.arn
+  health_check_grace_period_seconds = 300
   load_balancer {
     target_group_arn = data.terraform_remote_state.route53_public.outputs.aws_lb_target_group_http_arn
     container_name   = var.service_name
